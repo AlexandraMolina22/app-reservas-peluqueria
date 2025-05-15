@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reservar cita</title>
+</head>
+<body>
+    <h2>Reservar cita</h2>
+
+    {% if mensaje %}
+    <p style="color:green;">{{ mensaje }}</p>
+    {% endif %}
+
+    <form action="/reservar" method="post" id="reserva-form">
+        <label for="servicio">Servicio:</label>
+        <select name="servicio" id="servicio" required>
+            <option value="" disabled selected>Seleccione un servicio</option>
+            {% for servicio in servicios %}
+            <option value="{{ servicio.id }}">{{ servicio.nombre }}</option>
+            {% endfor %}
+        </select><br><br>
+
+        <label for="fecha">Fecha:</label>
+        <input type="date" name="fecha" id="fecha" required><br><br>
+
+        <label for="hora">Hora:</label>
+        <input type="time" name="hora" id="hora" required><br><br>
+
+        <button type="submit">Reservar</button>
+    </form>
+
+    <h3>Mis citas</h3>
+
+    {% if citas %}
+    <table border="1" cellpadding="5" cellspacing="0">
+        <tr>
+            <th>Servicio</th>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Estado</th>
+        </tr>
+        {% for cita in citas %}
+        <tr>
+            <td>{{ cita.servicio.nombre }}</td>
+            <td>{{ cita.fecha }}</td>
+            <td>{{ cita.hora.strftime('%H:%M') }}</td>
+            <td>{{ cita.estado }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p>No tienes citas reservadas.</p>
+    {% endif %}
+
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+</head>
+<body>
+    <h2>Iniciar sesión</h2>
+
+    {% if mensaje %}
+        <p style="color:red;">{{ mensaje }}</p>
+    {% endif %}
+
+    <form action="/login" method="post" id="login-form">
+        <label for="nombre">Nombre:</label><br>
+        <input type="text" name="nombre" placeholder="Nombre" required><br><br>
+
+        <label for="cedula">Cédula:</label><br>
+        <input type="text" name="cedula" placeholder="Cédula" required><br><br>
+
+        <button type="submit">Entrar</button>
+    </form>
+
+    <p>¿Eres nuevo? <a href="{{ url_for('registro') }}">Regístrate aquí</a></p>
+</body>
+</html>
+

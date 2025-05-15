@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Panel de Administración</title>
+</head>
+<body>
+    <h2>Panel de Administración</h2>
+    <a href="/logout">Cerrar sesión</a>
+
+    {% if citas %}
+    <table border="1">
+        <tr>
+            <th>Cliente</th>
+            <th>Servicio</th>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+        {% for cita in citas %}
+        <tr>
+            <td>{{ cita.usuario.nombre }}</td>
+            <td>{{ cita.servicio.nombre }}</td>
+            <td>{{ cita.fecha }}</td>
+            <td>{{ cita.hora }}</td>
+            <td>{{ cita.estado }}</td>
+            <td>
+                {% if cita.estado == 'pendiente' %}
+                <form action="/admin/confirmar/{{ cita.id }}" method="post" style="display:inline;">
+                    <button type="submit">Confirmar</button>
+                </form>
+                <form action="/admin/cancelar/{{ cita.id }}" method="post" style="display:inline;">
+                    <button type="submit">Cancelar</button>
+                </form>
+                {% else %}
+                {{ cita.estado | capitalize }}
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p>No hay citas registradas.</p>
+    {% endif %}
+</body>
+</html>
