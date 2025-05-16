@@ -19,3 +19,5 @@ with app.app_context():
 
     db.session.commit()
     print("✅ Base de datos inicializada con usuarios y servicios.")
+
+

@@ -1,46 +1,69 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8">
     <title>Panel de Administración</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="container mt-5">
+
     <h2>Panel de Administración</h2>
-    <a href="/logout">Cerrar sesión</a>
+
+    <div class="text-end mb-3">
+        <a href="{{ url_for('logout') }}" class="btn btn-secondary">Cerrar sesión</a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
 
     {% if citas %}
-    <table border="1">
-        <tr>
-            <th>Cliente</th>
-            <th>Servicio</th>
-            <th>Fecha</th>
-            <th>Hora</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-        </tr>
-        {% for cita in citas %}
-        <tr>
-            <td>{{ cita.usuario.nombre }}</td>
-            <td>{{ cita.servicio.nombre }}</td>
-            <td>{{ cita.fecha }}</td>
-            <td>{{ cita.hora }}</td>
-            <td>{{ cita.estado }}</td>
-            <td>
-                {% if cita.estado == 'pendiente' %}
-                <form action="/admin/confirmar/{{ cita.id }}" method="post" style="display:inline;">
-                    <button type="submit">Confirmar</button>
-                </form>
-                <form action="/admin/cancelar/{{ cita.id }}" method="post" style="display:inline;">
-                    <button type="submit">Cancelar</button>
-                </form>
-                {% else %}
-                {{ cita.estado | capitalize }}
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Cliente</th>
+                <th>Servicio</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cita in citas %}
+            <tr>
+                <td>{{ cita.usuario.nombre }}</td>
+                <td>{{ cita.servicio.nombre }}</td>
+                <td>{{ cita.fecha }}</td>
+                <td>{{ cita.hora }}</td>
+                <td>{{ cita.estado }}</td>
+                <td>
+                    {% if cita.estado == 'pendiente' %}
+                    <form action="{{ url_for('confirmar_cita', cita_id=cita.id) }}" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-success btn-sm">Confirmar</button>
+                    </form>
+                    <form action="{{ url_for('cancelar_cita', cita_id=cita.id) }}" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-danger btn-sm">Cancelar</button>
+                    </form>
+                    {% else %}
+                        <span class="text-muted">No disponible</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
     {% else %}
-    <p>No hay citas registradas.</p>
+        <p>No hay citas registradas.</p>
     {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

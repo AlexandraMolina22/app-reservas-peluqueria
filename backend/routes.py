@@ -1,135 +1,128 @@
-from flask import render_template, request, redirect, url_for, session, jsonify
+from flask import render_template, request, redirect, url_for, session, flash
 from app import app
 from models import Usuario, Cita, Servicio
 from database import db
 from datetime import datetime
 
+# Redirige '/' al login
 @app.route('/')
-def home():
-    return redirect('/login')
+def inicio():
+    return redirect(url_for('login'))
 
+# Ruta de login
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        nombre = request.form.get('nombre')
-        cedula = request.form.get('cedula')
+        nombre = request.form['nombre']
+        cedula = request.form['cedula']
         usuario = Usuario.query.filter_by(nombre=nombre, cedula=cedula).first()
+        
         if usuario:
             session['usuario_id'] = usuario.id
             session['rol'] = usuario.rol
             if usuario.rol == 'admin':
                 return redirect(url_for('admin_panel'))
             else:
-                return redirect(url_for('reservar'))
+                return redirect(url_for('cliente_panel'))
         else:
-            return render_template('login.html', mensaje="Credenciales inválidas")
+            flash('Credenciales incorrectas o usuario no registrado.', 'danger')
+            return redirect(url_for('login'))
+    
     return render_template('login.html')
 
+# Registro de usuario
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():
     if request.method == 'POST':
-        nombre = request.form.get('nombre')
-        cedula = request.form.get('cedula')
+        nombre = request.form['nombre']
+        cedula = request.form['cedula']
+        usuario_existente = Usuario.query.filter_by(nombre=nombre, cedula=cedula).first()
+        
+        if usuario_existente:
+            flash('El usuario ya existe. Por favor inicia sesión.', 'warning')
+            return redirect(url_for('login'))
 
-        # Verificar si la cédula ya está registrada
-        if Usuario.query.filter_by(cedula=cedula).first():
-            return render_template('registro.html', mensaje="Cédula ya registrada")
-
-        nuevo_usuario = Usuario(nombre=nombre, cedula=cedula, rol="clienta")
+        nuevo_usuario = Usuario(nombre=nombre, cedula=cedula, rol='clienta')
         db.session.add(nuevo_usuario)
         db.session.commit()
-
+        flash('Registro exitoso. Inicia sesión para continuar.', 'success')
         return redirect(url_for('login'))
+    
     return render_template('registro.html')
 
-@app.route('/logout')
-def logout():
-    session.clear()
-    return redirect(url_for('login'))
-
-@app.route('/reservar', methods=['GET', 'POST'])
-def reservar():
+# Vista para clientas (index.html)
+@app.route('/cliente', methods=['GET', 'POST'])
+def cliente_panel():
     usuario_id = session.get('usuario_id')
-    if not usuario_id:
+    rol = session.get('rol')
+
+    if not usuario_id or rol != 'clienta':
+        flash('Acceso no autorizado.', 'danger')
         return redirect(url_for('login'))
 
+    servicios = Servicio.query.all()
+    
     if request.method == 'POST':
-        servicio_id = request.form.get('servicio')
-        fecha_str = request.form.get('fecha')
-        hora_str = request.form.get('hora')
+        servicio_id = request.form['servicio']
+        fecha = request.form['fecha']
+        hora = request.form['hora']
 
-        usuario = Usuario.query.get(usuario_id)
-        servicio = Servicio.query.get(servicio_id)
-
-        if not servicio:
-            return render_template('index.html', mensaje="Servicio no válido", servicios=Servicio.query.all(), usuario_id=usuario_id)
-
+        # Convertir fecha y hora a objetos datetime para SQLite
         try:
-            fecha = datetime.strptime(fecha_str, '%Y-%m-%d').date()
-            hora = datetime.strptime(hora_str, '%H:%M').time()
+            fecha_obj = datetime.strptime(fecha, "%Y-%m-%d").date()
+            hora_obj = datetime.strptime(hora, "%H:%M").time()
         except ValueError:
-            return render_template('index.html', mensaje="Fecha u hora inválida", servicios=Servicio.query.all(), usuario_id=usuario_id)
-
-        # Validar que no haya ninguna cita en ese horario (sin importar servicio)
-        cita_existente = Cita.query.filter_by(fecha=fecha, hora=hora).first()
+            flash('Formato de fecha u hora inválido.', 'danger')
+            return redirect(url_for('cliente_panel'))
+        
+        cita_existente = Cita.query.filter_by(fecha=fecha_obj, hora=hora_obj).first()
         if cita_existente:
-            return render_template('index.html', mensaje="Ya hay una cita en esa fecha y hora", servicios=Servicio.query.all(), usuario_id=usuario_id)
+            flash('Ya hay una cita en esa hora. Elige otra.', 'warning')
+            return redirect(url_for('cliente_panel'))
 
-        nueva_cita = Cita(
-            usuario_id=usuario.id,
-            servicio_id=servicio.id,
-            fecha=fecha,
-            hora=hora
-        )
+        nueva_cita = Cita(usuario_id=usuario_id, servicio_id=servicio_id,
+                          fecha=fecha_obj, hora=hora_obj, estado="pendiente")
         db.session.add(nueva_cita)
         db.session.commit()
+        flash('Cita reservada con éxito. Espera confirmación.', 'success')
+        return redirect(url_for('cliente_panel'))
+    
+    # Obtener las citas del usuario para mostrarlas
+    citas = Cita.query.filter_by(usuario_id=usuario_id).order_by(Cita.fecha.desc(), Cita.hora.desc()).all()
+    
+    return render_template('index.html', servicios=servicios, citas=citas)
 
-        return render_template('index.html', mensaje="Cita reservada con éxito", servicios=Servicio.query.all(), usuario_id=usuario_id)
-
-    servicios = Servicio.query.all()
-    citas = Cita.query.filter_by(usuario_id=usuario_id).order_by(Cita.fecha, Cita.hora).all()
-    return render_template('index.html', servicios=servicios, usuario_id=usuario_id, citas=citas)
-
+# Vista para administradora
 @app.route('/admin')
 def admin_panel():
     if session.get('rol') != 'admin':
+        flash('Acceso restringido solo para la administradora.', 'danger')
         return redirect(url_for('login'))
+
     citas = Cita.query.all()
     return render_template('admin.html', citas=citas)
 
-@app.route('/admin/confirmar/<int:cita_id>', methods=['POST'])
+# Confirmar cita
+@app.route('/confirmar/<int:cita_id>', methods=['POST'])
 def confirmar_cita(cita_id):
-    if session.get('rol') != 'admin':
-        return redirect(url_for('login'))
     cita = Cita.query.get_or_404(cita_id)
     cita.estado = 'confirmada'
     db.session.commit()
+    flash('Cita confirmada.', 'success')
     return redirect(url_for('admin_panel'))
 
-
-@app.route('/admin/cancelar/<int:cita_id>', methods=['POST'])
+# Cancelar cita
+@app.route('/cancelar/<int:cita_id>', methods=['POST'])
 def cancelar_cita(cita_id):
-    if session.get('rol') != 'admin':
-        return redirect(url_for('login'))
     cita = Cita.query.get_or_404(cita_id)
     cita.estado = 'cancelada'
     db.session.commit()
+    flash('Cita cancelada.', 'info')
     return redirect(url_for('admin_panel'))
 
-
-@app.route('/api/citas')
-def api_citas():
-    if session.get('rol') != 'admin':
-        return jsonify([]), 403
-    citas = Cita.query.all()
-    citas_list = []
-    for c in citas:
-        citas_list.append({
-            "id": c.id,
-            "nombre_clienta": c.usuario.nombre,
-            "servicio": c.servicio.nombre,
-            "fecha": c.fecha.strftime('%Y-%m-%d'),
-            "hora": c.hora.strftime('%H:%M'),
-            "estado": c.estado
-        })
-    return jsonify(citas_list)
+# Cerrar sesión
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('Sesión cerrada.', 'info')
+    return redirect(url_for('login'))
