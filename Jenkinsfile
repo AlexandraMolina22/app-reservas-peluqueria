@@ -8,13 +8,13 @@ pipeline {
         }
         stage('Install Dependencies') {
             steps {
-                sh 'python -m venv venv'
-                sh './venv/Scripts/activate && pip install -r requirements.txt'
+                bat 'python -m venv venv'
+                bat 'venv\\Scripts\\activate && pip install -r requirements.txt'
             }
         }
         stage('Run Tests') {
             steps {
-                sh './venv/Scripts/activate && pytest backend/tests'
+                bat 'venv\\Scripts\\activate && pytest backend/tests'
             }
         }
     }
