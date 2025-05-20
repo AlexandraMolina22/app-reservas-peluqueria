@@ -2,29 +2,31 @@ pipeline {
     agent any
 
     stages {
-        stage('Clonar repositorio') {
+        stage('Clonar código') {
             steps {
-                git branch: 'main', url: 'https://github.com/AlexandraMolina22/app-reservas-peluqueria.git'
+                echo 'Clonando código desde GitHub...'
+                checkout scm
             }
         }
 
         stage('Instalar dependencias') {
             steps {
-                sh '''
-                    python3 -m venv venv
-                    source venv/bin/activate
-                    pip install -r requirements.txt
-                '''
+                echo 'Instalando dependencias con pip...'
+                sh 'pip install -r requirements.txt'
             }
         }
 
         stage('Ejecutar pruebas') {
             steps {
-                sh '''
-                    source venv/bin/activate
-                    pytest backend/tests
-                '''
+                echo 'Ejecutando pruebas unitarias con pytest...'
+                sh 'pytest --junitxml=results.xml'
             }
+        }
+    }
+
+    post {
+        always {
+            junit 'results.xml'
         }
     }
 }
