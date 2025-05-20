@@ -17,13 +17,23 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 bat 'python -m venv venv'
-                bat 'venv\\Scripts\\activate && pip install -r requirements.txt'
+                bat 'cmd /c "venv\\Scripts\\activate && pip install -r requirements.txt"'
+            }
+        }
+        stage('Prepare Reports Directory') {
+            steps {
+                bat 'if not exist reports mkdir reports'
             }
         }
         stage('Run Tests') {
             steps {
-                bat 'venv\\Scripts\\activate && pytest backend/tests'
+                bat 'cmd /c "venv\\Scripts\\activate && pytest backend/tests --junitxml=reports/results.xml"'
             }
+        }
+    }
+    post {
+        always {
+            junit 'reports/results.xml'
         }
     }
 }
