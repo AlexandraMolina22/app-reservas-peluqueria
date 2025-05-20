@@ -1,32 +1,43 @@
 pipeline {
     agent any
 
-    stages {
-        stage('Clonar código') {
-            steps {
-                echo 'Clonando código desde GitHub...'
-                checkout scm
-            }
-        }
+    environment {
+        VENV_DIR = '.venv'
+    }
 
-        stage('Instalar dependencias') {
+    stages {
+        stage('Preparar entorno') {
             steps {
-                echo 'Instalando dependencias con pip...'
-                sh 'pip install -r requirements.txt'
+                echo 'Creando entorno virtual e instalando dependencias...'
+                sh 'python3 -m venv $VENV_DIR'
+                sh '''
+                    source $VENV_DIR/bin/activate
+                    pip install --upgrade pip
+                    pip install -r requirements.txt
+                '''
             }
         }
 
         stage('Ejecutar pruebas') {
             steps {
-                echo 'Ejecutando pruebas unitarias con pytest...'
-                sh 'pytest --junitxml=results.xml'
+                echo 'Ejecutando pytest...'
+                sh '''
+                    source $VENV_DIR/bin/activate
+                    pytest backend/tests
+                '''
             }
         }
     }
 
     post {
         always {
-            junit 'results.xml'
+            echo '📦 Proceso completado.'
+        }
+        success {
+            echo '✅ Pruebas ejecutadas con éxito.'
+        }
+        failure {
+            echo '❌ Error en las pruebas.'
         }
     }
 }
