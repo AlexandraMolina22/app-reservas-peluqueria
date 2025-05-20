@@ -1,22 +1,20 @@
 pipeline {
     agent any
-
     stages {
-        stage('Clonar repositorio') {
+        stage('Clone Repository') {
             steps {
                 git 'https://github.com/AlexandraMolina22/app-reservas-peluqueria.git'
             }
         }
-
-        stage('Instalar dependencias') {
+        stage('Install Dependencies') {
             steps {
-                sh 'pip install -r requirements.txt'
+                sh 'python -m venv venv'
+                sh './venv/Scripts/activate && pip install -r requirements.txt'
             }
         }
-
-        stage('Ejecutar pruebas') {
+        stage('Run Tests') {
             steps {
-                sh 'pytest'
+                sh './venv/Scripts/activate && pytest backend/tests'
             }
         }
     }
