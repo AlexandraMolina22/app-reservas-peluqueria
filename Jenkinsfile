@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git 'https://github.com/AlexandraMolina22/app-reservas-peluqueria.git'
+                git branch: 'main', url: 'https://github.com/AlexandraMolina22/app-reservas-peluqueria.git'
             }
         }
         stage('Install Dependencies') {
