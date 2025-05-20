@@ -10,14 +10,20 @@ pipeline {
 
         stage('Instalar dependencias') {
             steps {
-                sh 'python -m venv venv'
-                sh '. venv/Scripts/activate && pip install -r requirements.txt'
+                sh '''
+                    python -m venv venv
+                    source venv/bin/activate
+                    pip install -r requirements.txt
+                '''
             }
         }
 
         stage('Ejecutar pruebas') {
             steps {
-                sh '. venv/Scripts/activate && pytest backend/tests'
+                sh '''
+                    source venv/bin/activate
+                    pytest backend/tests
+                '''
             }
         }
     }
