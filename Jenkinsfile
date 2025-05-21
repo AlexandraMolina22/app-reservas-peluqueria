@@ -20,10 +20,10 @@ pipeline {
 
         stage('Ejecutar pruebas') {
             steps {
-                echo 'Ejecutando pytest...'
+                echo 'Ejecutando pytest con cobertura...'
                 sh '''
                     . $VENV_DIR/bin/activate
-                    pytest backend/tests
+                    pytest backend/tests --cov=backend --cov-report=xml
                 '''
             }
         }
@@ -32,6 +32,7 @@ pipeline {
     post {
         always {
             echo '📦 Proceso completado.'
+            archiveArtifacts artifacts: 'coverage.xml', allowEmptyArchive: true
         }
         success {
             echo '✅ Pruebas ejecutadas con éxito.'
