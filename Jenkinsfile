@@ -27,6 +27,18 @@ pipeline {
                 '''
             }
         }
+
+        stage('Analizar con SonarQube') {
+            steps {
+                echo '🔍 Ejecutando análisis con SonarQube...'
+                withSonarQubeEnv('SonarQube') {
+                    sh '''
+                        . $VENV_DIR/bin/activate
+                        sonar-scanner
+                    '''
+                }
+            }
+        }
     }
 
     post {
