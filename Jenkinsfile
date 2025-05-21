@@ -30,14 +30,15 @@ pipeline {
 
         stage('Analizar con SonarQube') {
             steps {
-                echo '🔍 Ejecutando análisis con SonarQube...'
+                echo '🔍 Ejecutando análisis con SonarQube usando contenedor Docker...'
                 withSonarQubeEnv('SonarQube') {
-                    script {
-                        // Ejecutar sonar-scanner dentro del contenedor docker oficial
-                        docker.image('sonarsource/sonar-scanner-cli:latest').inside {
-                            sh 'sonar-scanner'
-                        }
-                    }
+                    sh '''
+                    docker run --rm \
+                      -v "$PWD:/usr/src" \
+                      -w /usr/src \
+                      sonarsource/sonar-scanner-cli \
+                      sonar-scanner
+                    '''
                 }
             }
         }
