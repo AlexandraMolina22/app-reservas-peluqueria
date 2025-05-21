@@ -3,7 +3,8 @@ pipeline {
 
     environment {
         VENV_DIR = '.venv'
-        SONAR_SCANNER_HOME = tool name: 'SonarScanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+        SONAR_HOST_URL = 'http://host.docker.internal:9000'
+        SONAR_TOKEN = credentials('sonar-token')  // Aquí usas credencial almacenada en Jenkins
     }
 
     stages {
@@ -19,22 +20,26 @@ pipeline {
             }
         }
 
-        stage('Análisis SonarQube') {
-            steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh '''
-                        $SONAR_SCANNER_HOME/bin/sonar-scanner
-                    '''
-                }
-            }
-        }
-
         stage('Ejecutar pruebas') {
             steps {
                 echo 'Ejecutando pytest...'
                 sh '''
                     . $VENV_DIR/bin/activate
                     pytest backend/tests
+                '''
+            }
+        }
+
+        stage('Análisis SonarQube') {
+            steps {
+                echo 'Ejecutando análisis SonarQube...'
+                sh '''
+                    . $VENV_DIR/bin/activate
+                    sonar-scanner \
+                      -Dsonar.projectKey=mi_proyecto \
+                      -Dsonar.sources=backend \
+                      -Dsonar.host.url=$SONAR_HOST_URL \
+                      -Dsonar.login=$SONAR_TOKEN
                 '''
             }
         }
@@ -45,10 +50,10 @@ pipeline {
             echo '📦 Proceso completado.'
         }
         success {
-            echo '✅ Pruebas ejecutadas con éxito.'
+            echo '✅ Pruebas y análisis ejecutados con éxito.'
         }
         failure {
-            echo '❌ Error en las pruebas.'
+            echo '❌ Error en las pruebas o análisis.'
         }
     }
 }
