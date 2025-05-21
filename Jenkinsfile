@@ -1,54 +1,54 @@
 pipeline {
-    agent {
-        docker {
-            image 'python:3.11-slim'
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
-        }
-    }
-    
+    agent any
+
     environment {
-        VENV_PATH = '.venv'
+        VENV_DIR = '.venv'
+        SONAR_SCANNER_HOME = tool name: 'SonarScanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
     }
 
     stages {
         stage('Preparar entorno') {
             steps {
-                echo '🛠️ Creando entorno virtual e instalando dependencias...'
-                sh """
-                   python3 -m venv $VENV_PATH
-                   . $VENV_PATH/bin/activate
-                   pip install --upgrade pip
-                   pip install -r requirements.txt
-                """
+                echo 'Creando entorno virtual e instalando dependencias...'
+                sh '''
+                    python3 -m venv $VENV_DIR
+                    . $VENV_DIR/bin/activate
+                    pip install --upgrade pip
+                    pip install -r requirements.txt
+                '''
             }
         }
-        
+
+        stage('Análisis SonarQube') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh '''
+                        $SONAR_SCANNER_HOME/bin/sonar-scanner
+                    '''
+                }
+            }
+        }
+
         stage('Ejecutar pruebas') {
             steps {
-                echo '🚀 Ejecutando pruebas con pytest...'
-                sh """
-                   . $VENV_PATH/bin/activate
-                   pytest --maxfail=1 --disable-warnings -q
-                """
-            }
-        }
-        
-        stage('Analizar con SonarQube') {
-            steps {
-                echo '🔎 Analizando código con SonarQube...'
-                // Aquí agregarías el comando sonar-scanner
-                // sh 'sonar-scanner'
+                echo 'Ejecutando pytest...'
+                sh '''
+                    . $VENV_DIR/bin/activate
+                    pytest backend/tests
+                '''
             }
         }
     }
-    
+
     post {
         always {
-            echo '🏁 Pipeline terminado.'
-            // Aquí podrías agregar limpieza, notificaciones, etc.
+            echo '📦 Proceso completado.'
+        }
+        success {
+            echo '✅ Pruebas ejecutadas con éxito.'
         }
         failure {
-            echo '❌ Hubo un error en el pipeline.'
+            echo '❌ Error en las pruebas.'
         }
     }
 }
