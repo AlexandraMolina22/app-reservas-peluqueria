@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Preparar entorno') {
             steps {
-                echo 'Creando entorno virtual e instalando dependencias...'
+                echo '🛠️ Creando entorno virtual e instalando dependencias...'
                 sh '''
                     python3 -m venv $VENV_DIR
                     . $VENV_DIR/bin/activate
@@ -18,12 +18,12 @@ pipeline {
             }
         }
 
-        stage('Ejecutar pruebas') {
+        stage('Ejecutar pruebas con cobertura') {
             steps {
-                echo 'Ejecutando pytest con cobertura...'
+                echo '🧪 Ejecutando pytest con cobertura...'
                 sh '''
                     . $VENV_DIR/bin/activate
-                    pytest backend/tests --cov=backend --cov-report=xml
+                    pytest backend/tests --cov=backend --cov-report=xml --cov-report=term
                 '''
             }
         }
