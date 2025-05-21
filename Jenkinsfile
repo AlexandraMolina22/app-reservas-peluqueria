@@ -32,10 +32,12 @@ pipeline {
             steps {
                 echo '🔍 Ejecutando análisis con SonarQube...'
                 withSonarQubeEnv('SonarQube') {
-                    sh '''
-                        . $VENV_DIR/bin/activate
-                        sonar-scanner
-                    '''
+                    script {
+                        // Ejecutar sonar-scanner dentro del contenedor docker oficial
+                        docker.image('sonarsource/sonar-scanner-cli:latest').inside {
+                            sh 'sonar-scanner'
+                        }
+                    }
                 }
             }
         }
