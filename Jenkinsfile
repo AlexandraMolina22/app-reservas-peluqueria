@@ -3,8 +3,7 @@ pipeline {
 
     environment {
         VENV_DIR = '.venv'
-        SONAR_HOST_URL = 'http://host.docker.internal:9000'
-        SONAR_TOKEN = credentials('sonar-token')  // Aquí usas credencial almacenada en Jenkins
+        SONAR_TOKEN = credentials('sonar-token')  // usa el ID que diste en Jenkins
     }
 
     stages {
@@ -36,10 +35,10 @@ pipeline {
                 sh '''
                     . $VENV_DIR/bin/activate
                     sonar-scanner \
-                      -Dsonar.projectKey=mi_proyecto \
-                      -Dsonar.sources=backend \
-                      -Dsonar.host.url=$SONAR_HOST_URL \
-                      -Dsonar.login=$SONAR_TOKEN
+                    -Dsonar.projectKey=app-peluqueria \
+                    -Dsonar.sources=. \
+                    -Dsonar.host.url=http://localhost:9000 \
+                    -Dsonar.login=$SONAR_TOKEN
                 '''
             }
         }
