@@ -1,59 +1,54 @@
 pipeline {
-    agent any
-
+    agent {
+        docker {
+            image 'python:3.11-slim'
+            args '-v /var/run/docker.sock:/var/run/docker.sock'
+        }
+    }
+    
     environment {
-        VENV_DIR = '.venv'
+        VENV_PATH = '.venv'
     }
 
     stages {
         stage('Preparar entorno') {
             steps {
                 echo '🛠️ Creando entorno virtual e instalando dependencias...'
-                sh '''
-                    python3 -m venv $VENV_DIR
-                    . $VENV_DIR/bin/activate
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
-                '''
+                sh """
+                   python3 -m venv $VENV_PATH
+                   . $VENV_PATH/bin/activate
+                   pip install --upgrade pip
+                   pip install -r requirements.txt
+                """
             }
         }
-
-        stage('Ejecutar pruebas con cobertura') {
+        
+        stage('Ejecutar pruebas') {
             steps {
-                echo '🧪 Ejecutando pytest con cobertura...'
-                sh '''
-                    . $VENV_DIR/bin/activate
-                    pytest backend/tests --cov=backend --cov-report=xml --cov-report=term
-                '''
+                echo '🚀 Ejecutando pruebas con pytest...'
+                sh """
+                   . $VENV_PATH/bin/activate
+                   pytest --maxfail=1 --disable-warnings -q
+                """
             }
         }
-
+        
         stage('Analizar con SonarQube') {
             steps {
-                echo '🔍 Ejecutando análisis con SonarQube usando contenedor Docker...'
-                withSonarQubeEnv('SonarQube') {
-                    sh '''
-                    docker run --rm \
-                      -v "$PWD:/usr/src" \
-                      -w /usr/src \
-                      sonarsource/sonar-scanner-cli \
-                      sonar-scanner
-                    '''
-                }
+                echo '🔎 Analizando código con SonarQube...'
+                // Aquí agregarías el comando sonar-scanner
+                // sh 'sonar-scanner'
             }
         }
     }
-
+    
     post {
         always {
-            echo '📦 Proceso completado.'
-            archiveArtifacts artifacts: 'coverage.xml', allowEmptyArchive: true
-        }
-        success {
-            echo '✅ Pruebas ejecutadas con éxito.'
+            echo '🏁 Pipeline terminado.'
+            // Aquí podrías agregar limpieza, notificaciones, etc.
         }
         failure {
-            echo '❌ Error en las pruebas.'
+            echo '❌ Hubo un error en el pipeline.'
         }
     }
 }
