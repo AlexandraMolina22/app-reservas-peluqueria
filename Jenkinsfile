@@ -32,7 +32,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 echo '📊 Ejecutando análisis con SonarQube...'
-                withSonarQubeEnv("${SONARQUBE_ENV}") {
+                withSonarQubeEnv('SonarQube') {
                     sh '''
                         . $VENV_DIR/bin/activate
                         sonar-scanner \
