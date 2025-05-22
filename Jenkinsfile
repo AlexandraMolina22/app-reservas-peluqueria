@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         VENV_DIR = '.venv'
-        SONAR_TOKEN = credentials('sonar-token')  // usa el ID que diste en Jenkins
     }
 
     stages {
@@ -28,20 +27,6 @@ pipeline {
                 '''
             }
         }
-
-        stage('Análisis SonarQube') {
-            steps {
-                echo 'Ejecutando análisis SonarQube...'
-                sh '''
-                    . $VENV_DIR/bin/activate
-                    sonar-scanner \
-                    -Dsonar.projectKey=app-peluqueria \
-                    -Dsonar.sources=. \
-                    -Dsonar.host.url=http://localhost:9000 \
-                    -Dsonar.login=$SONAR_TOKEN
-                '''
-            }
-        }
     }
 
     post {
@@ -49,10 +34,10 @@ pipeline {
             echo '📦 Proceso completado.'
         }
         success {
-            echo '✅ Pruebas y análisis ejecutados con éxito.'
+            echo '✅ Pruebas ejecutadas con éxito.'
         }
         failure {
-            echo '❌ Error en las pruebas o análisis.'
+            echo '❌ Error en las pruebas.'
         }
     }
 }
