@@ -16,19 +16,18 @@
       {% endif %}
     {% endwith %}
 
-    <form method="POST" id="login-form">
-        <div class="mb-3">
-            <label for="nombre">Nombre:</label>
-            <input type="text" name="nombre" class="form-control" required>
-        </div>
+    <form method="POST" action="{{ url_for('login') }}">
+    {{ form.hidden_tag() }}  <!-- Aquí se incluye el token CSRF -->
 
-        <div class="mb-3">
-            <label for="cedula">Cédula:</label>
-            <input type="text" name="cedula" class="form-control" required>
-        </div>
+    <label for="nombre">Nombre:</label>
+    {{ form.nombre(size=20) }}
 
-        <button type="submit" class="btn btn-primary">Entrar</button>
-    </form>
+    <label for="cedula">Cédula:</label>
+    {{ form.cedula(size=20) }}
+
+    <button type="submit">Ingresar</button>
+</form>
+
 
     <p class="mt-3">¿Eres nuevo? <a href="{{ url_for('registro') }}">Regístrate aquí</a></p>
 </body>

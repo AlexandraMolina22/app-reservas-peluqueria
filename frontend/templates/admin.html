@@ -47,9 +47,11 @@
                 <td>
                     {% if cita.estado == 'pendiente' %}
                     <form action="{{ url_for('confirmar_cita', cita_id=cita.id) }}" method="post" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-success btn-sm">Confirmar</button>
                     </form>
                     <form action="{{ url_for('cancelar_cita', cita_id=cita.id) }}" method="post" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-danger btn-sm">Cancelar</button>
                     </form>
                     {% else %}
