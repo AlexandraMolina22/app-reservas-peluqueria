@@ -29,7 +29,7 @@ pipeline {
                 echo '🧪 Ejecutando pytest...'
                 sh '''
                     . $VENV_DIR/bin/activate
-                    pytest backend/tests --junitxml=report.xml
+                    pytest backend/tests --junitxml=report.xml --cov=backend --cov-report=xml
                 '''
             }
         }
