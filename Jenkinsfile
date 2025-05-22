@@ -7,6 +7,19 @@ pipeline {
     }
 
     stages {
+
+        stage('Checkout') {
+            steps {
+                echo '🔄 Clonando el repositorio...'
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[url: 'https://github.com/AlexandraMolina22/app-reservas-peluqueria.git']],
+                    extensions: [[$class: 'CloneOption', shallow: false]] // ¡Clave!
+                ])
+            }
+        }
+
         stage('Preparar entorno') {
             steps {
                 echo '📦 Creando entorno virtual e instalando dependencias...'
