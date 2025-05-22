@@ -3,18 +3,13 @@ pipeline {
 
     environment {
         VENV_DIR = '.venv'
-    }
-
-    tools {
-        // Asegúrate de que 'SonarQube Scanner' esté configurado en Jenkins Global Tool Configuration
-        // y que el nombre coincida con el que pongas aquí, por ejemplo: "SonarQubeScanner"
-        sonarScanner = 'SonarQubeScanner'
+        SONARQUBE_ENV = 'SonarQube' // Nombre de la instalación SonarQube en Jenkins
     }
 
     stages {
         stage('Preparar entorno') {
             steps {
-                echo '🔧 Creando entorno virtual e instalando dependencias...'
+                echo '📦 Creando entorno virtual e instalando dependencias...'
                 sh '''
                     python3 -m venv $VENV_DIR
                     . $VENV_DIR/bin/activate
@@ -26,7 +21,7 @@ pipeline {
 
         stage('Ejecutar pruebas') {
             steps {
-                echo '🧪 Ejecutando pytest...'
+                echo '✅ Ejecutando pruebas con Pytest...'
                 sh '''
                     . $VENV_DIR/bin/activate
                     pytest backend/tests --junitxml=report.xml --cov=backend --cov-report=xml
@@ -34,17 +29,17 @@ pipeline {
             }
         }
 
-        stage('Análisis SonarQube') {
+        stage('SonarQube Analysis') {
             steps {
                 echo '📊 Ejecutando análisis con SonarQube...'
-                withSonarQubeEnv('SonarQube Local') {
+                withSonarQubeEnv("${SONARQUBE_ENV}") {
                     sh '''
+                        . $VENV_DIR/bin/activate
                         sonar-scanner \
-                          -Dsonar.projectKey=app-reservas-peluqueria \
-                          -Dsonar.sources=backend \
-                          -Dsonar.python.coverage.reportPaths=coverage.xml \
-                          -Dsonar.junit.reportPaths=report.xml \
-                          -Dsonar.host.url=http://localhost:9000
+                            -Dsonar.projectKey=app-reservas-peluqueria \
+                            -Dsonar.sources=backend \
+                            -Dsonar.host.url=http://localhost:9000 \
+                            -Dsonar.python.coverage.reportPaths=coverage.xml
                     '''
                 }
             }
@@ -53,13 +48,13 @@ pipeline {
 
     post {
         always {
-            echo '📦 Proceso completado.'
+            echo '🔁 Proceso completo.'
         }
         success {
-            echo '✅ Pruebas ejecutadas con éxito.'
+            echo '✅ Pipeline ejecutado con éxito.'
         }
         failure {
-            echo '❌ Error en las pruebas.'
+            echo '❌ Falló la ejecución del pipeline.'
         }
     }
 }
