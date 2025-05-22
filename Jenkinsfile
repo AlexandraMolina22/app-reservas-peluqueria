@@ -51,7 +51,7 @@ pipeline {
                         sonar-scanner \
                             -Dsonar.projectKey=app-reservas-peluqueria \
                             -Dsonar.sources=backend \
-                            -Dsonar.host.url=http://localhost:9000 \
+                            -Dsonar.host.url=http://host.docker.internal:9000 \
                             -Dsonar.python.coverage.reportPaths=coverage.xml
                     '''
                 }
