@@ -21,21 +21,29 @@
       {% endif %}
     {% endwith %}
 
-<form method="POST" action="{{ url_for('cliente_panel') }}">
-    {{ form.hidden_tag() }}
+    <form method="POST" action="{{ url_for('cliente_panel') }}" class="mb-4">
+        <div class="mb-3">
+            <label for="servicio">Servicio:</label>
+            <select name="servicio" id="servicio" class="form-select" required>
+                <option value="" disabled selected>Seleccione un servicio</option>
+                {% for servicio in servicios %}
+                <option value="{{ servicio.id }}">{{ servicio.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
 
-    <label for="servicio">Servicio:</label>
-    {{ form.servicio() }}
+        <div class="mb-3">
+            <label for="fecha">Fecha:</label>
+            <input type="date" name="fecha" id="fecha" class="form-control" required>
+        </div>
 
-    <label for="fecha">Fecha:</label>
-    {{ form.fecha() }}
+        <div class="mb-3">
+            <label for="hora">Hora:</label>
+            <input type="time" name="hora" id="hora" class="form-control" required>
+        </div>
 
-    <label for="hora">Hora:</label>
-    {{ form.hora() }}
-
-    <button type="submit">Reservar cita</button>
-</form>
-
+        <button type="submit" class="btn btn-primary">Reservar</button>
+    </form>
 
     <h3>Mis citas</h3>
 
@@ -76,3 +84,4 @@
 
 </body>
 </html>
+

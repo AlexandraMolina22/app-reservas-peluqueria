@@ -3,8 +3,6 @@ from app import app
 from models import Usuario, Cita, Servicio
 from database import db
 from datetime import datetime
-from forms import LoginForm, RegistroForm, ReservaForm  # importa los formularios
-
 
 # Redirige '/' al login
 @app.route('/')
@@ -14,10 +12,9 @@ def inicio():
 # Ruta de login
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        nombre = form.nombre.data
-        cedula = form.cedula.data
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        cedula = request.form['cedula']
         usuario = Usuario.query.filter_by(nombre=nombre, cedula=cedula).first()
         
         if usuario:
@@ -30,17 +27,15 @@ def login():
         else:
             flash('Credenciales incorrectas o usuario no registrado.', 'danger')
             return redirect(url_for('login'))
-
-    return render_template('login.html', form=form)
-
+    
+    return render_template('login.html')
 
 # Registro de usuario
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():
-    form = RegistroForm()
-    if form.validate_on_submit():
-        nombre = form.nombre.data
-        cedula = form.cedula.data
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        cedula = request.form['cedula']
         usuario_existente = Usuario.query.filter_by(nombre=nombre, cedula=cedula).first()
         
         if usuario_existente:
@@ -52,9 +47,8 @@ def registro():
         db.session.commit()
         flash('Registro exitoso. Inicia sesión para continuar.', 'success')
         return redirect(url_for('login'))
-
-    return render_template('registro.html', form=form)
-
+    
+    return render_template('registro.html')
 
 # Vista para clientas (index.html)
 @app.route('/cliente', methods=['GET', 'POST'])
@@ -66,16 +60,21 @@ def cliente_panel():
         flash('Acceso no autorizado.', 'danger')
         return redirect(url_for('login'))
 
-    form = ReservaForm()
-    # Llenar opciones para servicio
     servicios = Servicio.query.all()
-    form.servicio.choices = [(s.id, s.nombre) for s in servicios]
+    
+    if request.method == 'POST':
+        servicio_id = request.form['servicio']
+        fecha = request.form['fecha']
+        hora = request.form['hora']
 
-    if form.validate_on_submit():
-        servicio_id = form.servicio.data
-        fecha_obj = form.fecha.data
-        hora_obj = form.hora.data
-
+        # Convertir fecha y hora a objetos datetime para SQLite
+        try:
+            fecha_obj = datetime.strptime(fecha, "%Y-%m-%d").date()
+            hora_obj = datetime.strptime(hora, "%H:%M").time()
+        except ValueError:
+            flash('Formato de fecha u hora inválido.', 'danger')
+            return redirect(url_for('cliente_panel'))
+        
         cita_existente = Cita.query.filter_by(fecha=fecha_obj, hora=hora_obj).first()
         if cita_existente:
             flash('Ya hay una cita en esa hora. Elige otra.', 'warning')
@@ -87,11 +86,11 @@ def cliente_panel():
         db.session.commit()
         flash('Cita reservada con éxito. Espera confirmación.', 'success')
         return redirect(url_for('cliente_panel'))
-
-    # Obtener las citas para mostrar
+    
+    # Obtener las citas del usuario para mostrarlas
     citas = Cita.query.filter_by(usuario_id=usuario_id).order_by(Cita.fecha.desc(), Cita.hora.desc()).all()
-
-    return render_template('index.html', form=form, citas=citas)
+    
+    return render_template('index.html', servicios=servicios, citas=citas)
 
 # Vista para administradora
 @app.route('/admin')
